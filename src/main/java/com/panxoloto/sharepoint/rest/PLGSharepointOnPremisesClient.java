@@ -281,6 +281,28 @@ public class PLGSharepointOnPremisesClient implements PLGSharepointClient {
 
 	    return new JSONObject(responseEntity.getBody());
 	}
+
+	/**
+	 * @param folder folder server relative URL to check (/SITEURL/folder)
+	 * @param jsonExtendedAttrs extended body for the query.
+	 * @return json string representing folder info.
+	 * @throws Exception thrown when something went wrong.
+	 */
+	@Override
+	public JSONObject checkFolderExist(String folder, String jsonExtendedAttrs) throws Exception {
+		LOG.debug("getFolderByRelativeUrl {} jsonExtendedAttrs {}", new Object[] {folder, jsonExtendedAttrs});
+		MultiValueMap<String, String> headers = headerHelper.getGetHeaders(false);
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs,
+				headers, HttpMethod.GET,
+				this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Exists")
+		);
+
+		ResponseEntity<String> responseEntity =
+				restTemplate.exchange(requestEntity, String.class);
+
+		return new JSONObject(responseEntity.getBody());
+	}
 	
 	/**
 	 * @param folder folder server relative URL to retrieve (/SITEURL/folder)

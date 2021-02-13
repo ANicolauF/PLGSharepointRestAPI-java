@@ -1,5 +1,6 @@
 package com.panxoloto.sharepoint.rest;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,13 +82,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getAllLists {}", data);
 	    headers = headerHelper.getGetHeaders(false);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/lists");
+		LOG.info(String.format("URI: %s", uri ));
+
 	    RequestEntity<String> requestEntity = new RequestEntity<>(data, 
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/lists")
+	       	uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(responseEntity.getBody());
 	}
@@ -105,13 +109,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getListByTitle {} jsonExtendedAttrs {}", new Object[] {title, jsonExtendedAttrs});
 	    headers = headerHelper.getGetHeaders(false);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + title + "')");
+		LOG.info(String.format("URI: %s", uri ));
+
 	    RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs, 
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + title + "')")
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(responseEntity.getBody());
 	}
@@ -128,13 +135,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getListByTitle {} ", new Object[] {title});
 	    headers = headerHelper.getGetHeaders(false);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + title + "')/Fields");
+		LOG.info(String.format("URI: %s", uri ));
+
 	    RequestEntity<String> requestEntity = new RequestEntity<>("{}", 
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + title + "')/Fields")
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(responseEntity.getBody());
 	}
@@ -160,12 +170,15 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		
 		String payloadStr = payload.toString();
 		headers = headerHelper.getPostHeaders(payloadStr);
-	    
-	    RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr, 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/lists");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr,
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl("/_api/web/lists")
+    			uri
     			);
-	    ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}
 
@@ -188,12 +201,15 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 
 		String payloadStr = payload.toString();
 		headers = headerHelper.getUpdateHeaders(payloadStr);
-	    
-	    RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr, 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + listTitle + "')");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr,
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl("/_api/web/lists/GetByTitle('" + listTitle + "')")
+    			uri
     			);
-	    ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}
 
@@ -209,15 +225,43 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getListByTitle {} jsonExtendedAttrs {}", new Object[] {title, jsonExtendedAttrs});
 	    headers = headerHelper.getGetHeaders(true);
 
-	    RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs, 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/lists/GetByTitle('" + title + "')/items", filter);
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs,
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/lists/GetByTitle('" + title + "')/items", filter)
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(responseEntity.getBody());
+	}
+
+	/**
+	 * @param folder folder server relative URL to check (/SITEURL/folder)
+	 * @param jsonExtendedAttrs extended body for the query.
+	 * @return json string representing folder info.
+	 * @throws Exception thrown when something went wrong.
+	 */
+	@Override
+	public JSONObject checkFolderExist(String folder, String jsonExtendedAttrs) throws Exception {
+		LOG.debug("getFolderByRelativeUrl {} jsonExtendedAttrs {}", new Object[] {folder, jsonExtendedAttrs});
+		headers = headerHelper.getGetHeaders(false);
+
+		URI uri = this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Exists");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs,
+				headers, HttpMethod.GET,
+				uri
+		);
+
+		ResponseEntity<String> responseEntity =
+				restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
+
+		return new JSONObject(responseEntity.getBody());
 	}
 	
 	/**
@@ -231,13 +275,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getFolderByRelativeUrl {} jsonExtendedAttrs {}", new Object[] {folder, jsonExtendedAttrs});
 	    headers = headerHelper.getGetHeaders(false);
 
+		URI uri = this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')");
+		LOG.info(String.format("URI: %s", uri ));
+
 	    RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs, 
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')")
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(responseEntity.getBody());
 	}
@@ -253,13 +300,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getFolderFoldersByRelativeUrl {} jsonExtendedAttrs {}", new Object[] {folder, jsonExtendedAttrs});
 		headers = headerHelper.getGetHeaders(false);
 
+		URI uri = this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Folders");
+		LOG.info(String.format("URI: %s", uri ));
+
 		RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs,
 			  headers, HttpMethod.GET,
-			  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Folders")
+			  uri
 		);
 
 		ResponseEntity<String> responseEntity =
-				restTemplate.exchange(requestEntity, String.class);
+				restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 		return new JSONObject(responseEntity.getBody());
 	}
@@ -269,13 +319,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getFolderFilesByRelativeUrl {} ", new Object[] {folderServerRelativeUrl});
 		headers = headerHelper.getGetHeaders(false);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderServerRelativeUrl + "')/Files");
+		LOG.info(String.format("URI: %s", uri ));
+
 		RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 			  headers, HttpMethod.GET,
-			  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderServerRelativeUrl + "')/Files")
+			  uri
 		);
 
 		ResponseEntity<String> responseEntity =
-				restTemplate.exchange(requestEntity, String.class);
+				restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 		return new JSONObject(responseEntity.getBody());
 	}
@@ -291,13 +344,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("getFolderFilesByRelativeUrl {} jsonExtendedAttrs {}", new Object[] {folder, jsonExtendedAttrs});
 		headers = headerHelper.getGetHeaders(false);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Files");
+		LOG.info(String.format("URI: %s", uri ));
+
 		RequestEntity<String> requestEntity = new RequestEntity<>(jsonExtendedAttrs,
 			  headers, HttpMethod.GET,
-			  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/Files")
+			  uri
 		);
 
 		ResponseEntity<String> responseEntity =
-				restTemplate.exchange(requestEntity, String.class);
+				restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 		return new JSONObject(responseEntity.getBody());
 	}
@@ -313,13 +369,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("Deleting file {} ", fileServerRelativeUrl);
 
 	    headers = headerHelper.getDeleteHeaders();
-	    
-	    RequestEntity<String> requestEntity = new RequestEntity<>("{}", 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')")
+	        uri
 	        );
 
-	    restTemplate.exchange(requestEntity, String.class);
+	    restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return Boolean.TRUE;
 	}
 
@@ -335,12 +394,15 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 
 		headers = headerHelper.getGetHeaders(true);
 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')");
+		LOG.info(String.format("URI: %s", uri ));
+
 		RequestEntity<String> requestEntity = new RequestEntity<>("",
 			  headers, HttpMethod.GET,
-			  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')")
+			  uri
 		);
 
-		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+		ResponseEntity<String> responseEntity = restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 		return new JSONObject(responseEntity.getBody());
 	}
 
@@ -353,14 +415,17 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	public Resource downloadFile(String fileServerRelativeUrl) throws Exception {
 		LOG.debug("Downloading file {} ", fileServerRelativeUrl);
 
-	    headers = headerHelper.getGetHeaders(true);
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')/$value");
+		LOG.info(String.format("URI: %s", uri ));
+
+		headers = headerHelper.getGetHeaders(true);
 	    
 	    RequestEntity<String> requestEntity = new RequestEntity<>("", 
 	        headers, HttpMethod.GET, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')/$value")
+	        uri
 	        );
 
-	    ResponseEntity<Resource> response = restTemplate.exchange(requestEntity, Resource.class);
+	    ResponseEntity<Resource> response = restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, Resource.class);
 	    return response.getBody();
 	}
 
@@ -373,7 +438,7 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	 */
 	@Override
 	public JSONObject uploadFile(String folder, Resource resource, JSONObject jsonMetadata) throws Exception {
-		LOG.debug("Uploading file {} to folder {}", resource.getFilename(), folder);
+		LOG.info("Uploading file {} to folder {}", resource.getFilename(), folder);
 		JSONObject submeta = new JSONObject();
 		if (jsonMetadata.has("type")) {
 			submeta.put("type", jsonMetadata.get("type"));
@@ -385,16 +450,19 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    headers = headerHelper.getPostHeaders("");
 	    headers.remove("Content-Length");
 
-	    RequestEntity<Resource> requestEntity = new RequestEntity<>(resource, 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl(
+				"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
+						+ resource.getFilename() + "',overwrite=true)"
+		);
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<Resource> requestEntity = new RequestEntity<>(resource,
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl(
-		    		"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
-					+ resource.getFilename() + "',overwrite=true)"
-		    		)
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 
 	    String fileInfoStr = responseEntity.getBody();
 	    
@@ -407,14 +475,17 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    String metadata = jsonMetadata.toString();
 	    headers = headerHelper.getUpdateHeaders(metadata);
 
-	    LOG.debug("Updating file adding metadata {}", jsonMetadata);
+		URI uri1 =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + serverRelFileUrl + "')/listitemallfields");
+		LOG.info(String.format("URI: %s", uri1 ));
+
+		LOG.debug("Updating file adding metadata {}", jsonMetadata);
 
 	    RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata, 
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + serverRelFileUrl + "')/listitemallfields")
+	        uri1
 	        );
 	    ResponseEntity<String> responseEntity1 = 
-		        restTemplate.exchange(requestEntity1, String.class);
+		        restTemplate.exchange(uri1.toString(), HttpMethod.POST, requestEntity1, String.class);
 	    LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
 	    return jsonFileInfo;
 	}
@@ -436,16 +507,19 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    headers = headerHelper.getPostHeaders("");
 	    headers.remove("Content-Length");
 
-	    RequestEntity<Resource> requestEntity = new RequestEntity<>(resource, 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl(
+				"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
+						+ fileName + "',overwrite=true)"
+		);
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<Resource> requestEntity = new RequestEntity<>(resource,
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl(
-		    		"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
-					+ fileName + "',overwrite=true)"
-		    		)
+	        uri
 	        );
 
 	    ResponseEntity<String> responseEntity = 
-	        restTemplate.exchange(requestEntity, String.class);
+	        restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 
 	    String fileInfoStr = responseEntity.getBody();
 	    
@@ -460,12 +534,15 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 
 	    LOG.debug("Updating file adding metadata {}", jsonMetadata);
 
-	    RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata, 
+		URI uri1 =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + serverRelFileUrl + "')/listitemallfields");
+		LOG.info(String.format("URI: %s", uri1 ));
+
+		RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata,
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + serverRelFileUrl + "')/listitemallfields")
+	        uri1
 	        );
-	    ResponseEntity<String> responseEntity1 = 
-		        restTemplate.exchange(requestEntity1, String.class);
+	    ResponseEntity<String> responseEntity1 =
+		        restTemplate.exchange(uri1.toString(), HttpMethod.POST, requestEntity1, String.class);
 	    LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
 	    return jsonFileInfo;
 	}
@@ -490,14 +567,17 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    headers = headerHelper.getUpdateHeaders(metadata);
 	    LOG.debug("Updating file adding metadata {}", jsonMetadata);
 
-	    RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata, 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelatUrl + "')/listitemallfields");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(metadata,
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelatUrl + "')/listitemallfields")
+	        uri
 	        );
-	    ResponseEntity<String> responseEntity1 = 
-		        restTemplate.exchange(requestEntity1, String.class);
-	    LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
-	    return new JSONObject(responseEntity1);
+	    ResponseEntity<String> responseEntity =
+		        restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
+	    LOG.debug("Updated file metadata Status {}", responseEntity.getStatusCode());
+	    return new JSONObject(responseEntity);
 	}
 	
 	/**
@@ -520,14 +600,17 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    headers = headerHelper.getUpdateHeaders(metadata);
 	    LOG.debug("Updating file adding metadata {}", jsonMetadata);
 
-	    RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata, 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderServerRelatUrl + "')/listitemallfields");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(metadata,
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderServerRelatUrl + "')/listitemallfields")
+	        uri
 	        );
-	    ResponseEntity<String> responseEntity1 = 
-		        restTemplate.exchange(requestEntity1, String.class);
-	    LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
-	    return new JSONObject(responseEntity1);
+	    ResponseEntity<String> responseEntity =
+		        restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
+	    LOG.debug("Updated file metadata Status {}", responseEntity.getStatusCode());
+	    return new JSONObject(responseEntity);
 	}
 	
 	/**
@@ -540,13 +623,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("Breaking role inheritance on folder {}", folder);
 	    headers = headerHelper.getPostHeaders("");
 
-	    RequestEntity<String> requestEntity1 = new RequestEntity<>("", 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/breakroleinheritance(copyRoleAssignments=false,clearSubscopes=true)");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("",
 	        headers, HttpMethod.POST, 
-	        this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/breakroleinheritance(copyRoleAssignments=false,clearSubscopes=true)")
+	        uri
         );
 
-	    ResponseEntity<String> responseEntity1 =  restTemplate.exchange(requestEntity1, String.class);
-	    return new JSONObject(responseEntity1.getBody());
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
+	    return new JSONObject(responseEntity.getBody());
 	}
 
 	/**
@@ -568,15 +654,18 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 			meta.put("type", "SP.Folder");
 		}
 		payload.put("__metadata", meta);
-		payload.put("ServerRelativeUrl", baseFolderRemoteRelativeUrl + "/" + folder);
+		payload.put("ServerRelativeUrl", folder);
 		String payloadStr = payload.toString();
 		headers = headerHelper.getPostHeaders(payloadStr);
-		
-	    RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr, 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" +  baseFolderRemoteRelativeUrl + "')/folders");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>(payloadStr,
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" +  baseFolderRemoteRelativeUrl + "')/folders")
+    			uri
     			);
-	    ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}
 	
@@ -590,15 +679,18 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	public JSONObject moveFolder(String sourceRelativeServerUrl, String destinyRelativeServerUrl) throws Exception {
 		LOG.debug("createFolder sourceRelativeServerUrl {} destinyRelativeServerUrl {}", new Object[] {sourceRelativeServerUrl, destinyRelativeServerUrl});
 		headers = headerHelper.getPostHeaders("");
-	    
-	    RequestEntity<String> requestEntity = new RequestEntity<>("", 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl(
+				"/_api/web/GetFolderByServerRelativeUrl('" + sourceRelativeServerUrl
+						+ "')/moveto(newUrl='" + destinyRelativeServerUrl + "',flags=1)"
+		);
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("",
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl(
-    		    		"/_api/web/GetFolderByServerRelativeUrl('" + sourceRelativeServerUrl
-    		    	    		+ "')/moveto(newUrl='" + destinyRelativeServerUrl + "',flags=1)"
-    		    	    		)
+    			uri
     			);
-	    ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}
 	
@@ -612,15 +704,18 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	public JSONObject moveFile(String sourceRelativeServerUrl, String destinyRelativeServerUrl) throws Exception {
 		LOG.debug("createFolder sourceRelativeServerUrl {} destinyRelativeServerUrl {}", new Object[] {sourceRelativeServerUrl, destinyRelativeServerUrl});
 		headers = headerHelper.getPostHeaders("");
-	    
-	    RequestEntity<String> requestEntity = new RequestEntity<>("", 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl(
+				"/_api/web/GetFileByServerRelativeUrl('" + sourceRelativeServerUrl
+						+ "')/moveto(newUrl='"  + destinyRelativeServerUrl + "',flags=1)"
+		);
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("",
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl(
-    		    		"/_api/web/GetFileByServerRelativeUrl('" + sourceRelativeServerUrl
-    		    	    		+ "')/moveto(newUrl='"  + destinyRelativeServerUrl + "',flags=1)"
-    		    		)
+    			uri
     			);
-	    ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}
 	
@@ -634,11 +729,14 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("Deleting folder {}", folderRemoteRelativeUrl);
 		headers = headerHelper.getDeleteHeaders();
 
-	    RequestEntity<String> requestEntity = new RequestEntity<>("", 
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderRemoteRelativeUrl + "')");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("",
     			headers, HttpMethod.POST, 
-    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folderRemoteRelativeUrl + "')")
+    			uri
     			);
-	    restTemplate.exchange(requestEntity, String.class);
+	    restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return Boolean.TRUE;
 	}
 
@@ -655,13 +753,17 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 
 	    headers = headerHelper.getGetHeaders(false);
 
-	    List<Integer> userIds = new ArrayList<>();
+		List<Integer> userIds = new ArrayList<>();
 	    for (String user : users) {
+
+			URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/SiteUsers/getByEmail('" + user+ "')");
+			LOG.info(String.format("URI: %s", uri ));
+
 	    	RequestEntity<String> requestEntity = new RequestEntity<>("{}", 
 	    			headers, HttpMethod.GET, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/SiteUsers/getByEmail('" + user+ "')")
+	    			uri
 	    			);
-	    	ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    	ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 	    	JSONObject objJson = new JSONObject(responseEntity.getBody());
 	    	LOG.debug("json object retrieved for user {}", user);
 	    	Integer userId = (Integer) objJson.getJSONObject("d").get("Id");
@@ -671,12 +773,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    headers = headerHelper.getPostHeaders("{}");
 
 	    for (Integer userId : userIds) {
-	    	RequestEntity<String> requestEntity1 = new RequestEntity<>("{}", 
+
+			URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/addroleassignment(principalid=" + userId +",roleDefId=" + permission +")");
+			LOG.info(String.format("URI: %s", uri));
+
+	    	RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 	    			headers, HttpMethod.POST, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/addroleassignment(principalid=" + userId +",roleDefId=" + permission +")")
+	    			uri
     			);
 	    	
-	    	restTemplate.exchange(requestEntity1, String.class);
+	    	restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    }
 	    return Boolean.TRUE;
 	}
@@ -689,12 +795,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	@Override
 	public JSONObject getFolderPermissions(String folder) throws Exception {
 		headers = headerHelper.getGetHeaders(false);
-	    RequestEntity<String> requestEntity1 = new RequestEntity<>("{}", 
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments");
+		LOG.info(String.format("URI: %s", uri ));
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 	    		headers, HttpMethod.GET, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments")
+				uri
 	    		);
 	    
-	    ResponseEntity<String> response = restTemplate.exchange(requestEntity1, String.class);
+	    ResponseEntity<String> response = restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 
 	    return new JSONObject(response.getBody());
 	}
@@ -721,12 +831,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    
 	    headers = headerHelper.getDeleteHeaders();
 	    for (Integer userId : userIds) {
-	    	RequestEntity<String> requestEntity1 = new RequestEntity<>("{}", 
+
+			URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/getbyprincipalid(" + userId  +")");
+			LOG.info(String.format("URI: %s", uri ));
+
+			RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 	    			headers, HttpMethod.POST, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/getbyprincipalid(" + userId  +")")
+	    			uri
 			);
 	    	
-	    	restTemplate.exchange(requestEntity1, String.class);
+	    	restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    }
 	    return Boolean.TRUE;
 	}
@@ -747,11 +861,15 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 
 	    List<Integer> userIds = new ArrayList<>();
 	    for (String user : users) {
-	    	RequestEntity<String> requestEntity = new RequestEntity<>("{}", 
+
+			URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/SiteUsers/getByEmail('" + user+ "')");
+			LOG.info(String.format("URI: %s", uri ));
+
+			RequestEntity<String> requestEntity = new RequestEntity<>("{}",
 	    			headers, HttpMethod.GET, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/SiteUsers/getByEmail('" + user+ "')")
-	    			);
-	    	ResponseEntity<String> responseEntity =  restTemplate.exchange(requestEntity, String.class);
+	    			uri
+			);
+	    	ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.GET, requestEntity, String.class);
 	    	LOG.debug("JSON payload retrieved from server for user {}", user);
 	    	JSONObject objJson = new JSONObject(responseEntity.getBody());
 	    	Integer userId = (Integer) objJson.getJSONObject("d").get("Id");
@@ -760,12 +878,16 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	    
 	    headers = headerHelper.getDeleteHeaders();
 	    for (Integer userId : userIds) {
-	    	RequestEntity<String> requestEntity1 = new RequestEntity<>("{}", 
+
+			URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/getbyprincipalid(" + userId  +")");
+			LOG.info(String.format("URI: %s", uri ));
+
+			RequestEntity<String> requestEntity1 = new RequestEntity<>("{}",
 	    			headers, HttpMethod.POST, 
-	    			this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFolderByServerRelativeUrl('" + folder + "')/ListItemAllFields/roleAssignments/getbyprincipalid(" + userId  +")")
+	    			uri
 			);
 	    	
-	    	restTemplate.exchange(requestEntity1, String.class);
+	    	restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity1, String.class);
 	    }
 	    return Boolean.TRUE;
 	}
