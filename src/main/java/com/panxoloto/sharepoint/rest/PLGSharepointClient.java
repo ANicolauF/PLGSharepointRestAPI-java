@@ -114,7 +114,20 @@ public interface PLGSharepointClient {
 	 */
 	Boolean deleteFile(String fileServerRelativeUrl) throws Exception;
 
+	/**
+	 * @param fileServerRelativeUrl
+	 * @return
+	 * @throws Exception
+	 */
 	JSONObject getFileInfo(String fileServerRelativeUrl) throws Exception;
+
+	/**
+	 * @param fileServerRelativeUrl
+	 * @param info
+	 * @return
+	 * @throws Exception
+	 */
+	JSONObject getFileSpecificInfo(String fileServerRelativeUrl, String info) throws Exception;
 
 	/**
 	 * @param fileServerRelativeUrl
@@ -123,6 +136,13 @@ public interface PLGSharepointClient {
 	 */
 	Resource downloadFile(String fileServerRelativeUrl) throws Exception;
 
+	/**
+	 * @param fileServerRelativeUrl
+	 * @param fileName
+	 * @return
+	 * @throws Exception
+	 */
+	Resource downloadFile(String fileServerRelativeUrl, String fileName) throws Exception;
 	/**
 	 * @param folder
 	 * @param resource

@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class AuthTokenHelperOnline {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AuthTokenHelperOnline.class);
+	private static final Logger LOG = LoggerFactory.getLogger(com.panxoloto.sharepoint.rest.helper.AuthTokenHelperOnline.class);
 	private MultiValueMap<String, String> headers;
 	private String spSiteUri;
 	private String formDigestValue ;

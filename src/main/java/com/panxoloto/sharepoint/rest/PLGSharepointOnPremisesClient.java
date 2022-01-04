@@ -412,6 +412,27 @@ public class PLGSharepointOnPremisesClient implements PLGSharepointClient {
 		return new JSONObject(responseEntity.getBody());
 	}
 
+	/**
+	 * @param fileServerRelativeUrl
+	 * @param info
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public JSONObject getFileSpecificInfo(String fileServerRelativeUrl, String info) throws Exception {
+		LOG.debug("Getting file info {} ", fileServerRelativeUrl);
+
+		MultiValueMap<String, String> headers = headerHelper.getGetHeaders(true);
+
+		RequestEntity<String> requestEntity = new RequestEntity<>("",
+				headers, HttpMethod.GET,
+				this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + fileServerRelativeUrl +"')/" + info)
+		);
+
+		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+		return new JSONObject(responseEntity.getBody());
+	}
+
 
 	/**
 	 * @param fileServerRelativeUrl
@@ -421,6 +442,17 @@ public class PLGSharepointOnPremisesClient implements PLGSharepointClient {
 	@Override
 	public InputStreamResource downloadFile(String fileServerRelativeUrl) throws Exception {
 	    return downloadFileWithReponse(fileServerRelativeUrl).getBody();
+	}
+
+	/**
+	 * @param fileServerRelativeUrl
+	 * @param fileName
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public InputStreamResource downloadFile(String fileServerRelativeUrl, String fileName) throws Exception {
+		return downloadFileWithReponse(fileServerRelativeUrl).getBody();
 	}
 
 	public ResponseEntity<InputStreamResource> downloadFileWithReponse(String fileServerRelativeUrl) throws Exception {
