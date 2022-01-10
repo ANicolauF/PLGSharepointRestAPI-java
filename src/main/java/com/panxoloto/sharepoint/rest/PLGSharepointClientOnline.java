@@ -395,7 +395,7 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		headers = headerHelper.getGetHeaders(true);
 
 		URI uri =  this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + spSiteUrl + "/" + fileServerRelativeUrl +"')");
-		LOG.info(String.format("URI: %s", uri ));
+		LOG.debug(String.format("URI: %s", uri ));
 
 		RequestEntity<String> requestEntity = new RequestEntity<>("",
 			  headers, HttpMethod.GET,
