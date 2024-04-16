@@ -39,7 +39,8 @@ public class HeadersHelper {
 		headers.add("Content-Type", "application/json;odata=verbose");
 		headers.add("Content-length", "" + payloadStr.getBytes().length);
 		headers.add("X-ClientService-ClientTag", "SDK-JAVA");
-	    headers.add("Authorization", "Bearer " + this.tokenHelper.getFormDigestValue());
+	    //headers.add("Authorization", "Bearer " + this.tokenHelper.getFormDigestValue());
+		headers.add("X-RequestDigest", this.tokenHelper.getFormDigestValue());
 	    return headers;
 	}
 	
@@ -56,7 +57,8 @@ public class HeadersHelper {
 		headers.add("X-ClientService-ClientTag", "SDK-JAVA");
 		headers.add("X-HTTP-Method", "MERGE");
 		headers.add("IF-Match", "*");
-	    headers.add("Authorization", "Bearer " + this.tokenHelper.getFormDigestValue());
+	    //headers.add("Authorization", "Bearer " + this.tokenHelper.getFormDigestValue());
+		headers.add("X-RequestDigest", this.tokenHelper.getFormDigestValue());
 	    return headers;
 	}
 	

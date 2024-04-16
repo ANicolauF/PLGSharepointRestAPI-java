@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.transform.TransformerException;
 
@@ -51,7 +52,7 @@ public class AuthTokenHelperOnline {
 			+ "    <t:RequestSecurityToken xmlns:t=\"http://schemas.xmlsoap.org/ws/2005/02/trust\">\n"
 			+ "      <wsp:AppliesTo xmlns:wsp=\"http://schemas.xmlsoap.org/ws/2004/09/policy\">\n"
 			+ "        <a:EndpointReference>\n" 
-			+ "          <a:Address>%s</a:Address>\n"
+			+ "          <a:Address>https://%s</a:Address>\n"
 			+ "        </a:EndpointReference>\n" 
 			+ "      </wsp:AppliesTo>\n"
 			+ "      <t:KeyType>http://schemas.xmlsoap.org/ws/2005/05/identity/NoProofKey</t:KeyType>\n"
@@ -84,13 +85,16 @@ public class AuthTokenHelperOnline {
 	
 	
 	protected String receiveSecurityToken() throws URISyntaxException {
+		LOG.debug("AuthTokenHelper ReceiveSecurityToker()");
 		RequestEntity<String> requestEntity = 
 	        new RequestEntity<>(this.payload, 
 	        HttpMethod.POST, 
 	        new URI(TOKEN_LOGIN_URL));
-
+		LOG.debug("AuthTokenHelper ReceiveSecurityToken() - requestEntity OK");
 	    ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 		String securityToken = responseEntity.getBody();
+
+		LOG.debug(String.format("AuthTokenHelper ReceiveSecurityToken() - responseEntity OK\n%s", securityToken));
 		String clave1 = "<wsse:BinarySecurityToken";
 		String clave2 = "</wsse:BinarySecurityToken>";
 		securityToken = securityToken.substring(securityToken.indexOf(clave1));
@@ -101,8 +105,11 @@ public class AuthTokenHelperOnline {
 
 	protected List<String> getSignInCookies(String securityToken)
 			throws TransformerException, URISyntaxException, Exception {
-		RequestEntity<String> requestEntity = new RequestEntity<>(securityToken, HttpMethod.POST,
-				new URI(String.format("https://%s/_forms/default.aspx?wa=wsignin1.0", this.domain)));
+		RequestEntity<String> requestEntity =
+				new RequestEntity<>(securityToken,
+						HttpMethod.POST,
+						new URI(String.format("https://%s/_forms/default.aspx?wa=wsignin1.0", this.domain)));
+
 
 		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 		HttpHeaders headers = responseEntity.getHeaders();
@@ -120,13 +127,16 @@ public class AuthTokenHelperOnline {
 		headers = new LinkedMultiValueMap<>();
 		headers.add("Cookie",  cookies.stream().collect(Collectors.joining(";")) );
 		headers.add("Accept", "application/json;odata=verbose");
-		headers.add("X-ClientService-ClientTag", "SDK-JAVA");
+		headers.add("Content-Type", "application/json;odata=verbose");
+
+		//headers.add("X-ClientService-ClientTag", "SDK-JAVA");
 
 		RequestEntity<String> requestEntity = new RequestEntity<>(headers, HttpMethod.POST,
 				new URI(String.format("https://%s/_api/contextinfo", this.domain)));
 
 		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
 		String body = responseEntity.getBody();
+		LOG.debug(String.format("Response:\n%s", body));
 		JSONObject json = new JSONObject(body);
 
 		return json.getJSONObject("d").getJSONObject("GetContextWebInformation").getString("FormDigestValue");
@@ -136,9 +146,13 @@ public class AuthTokenHelperOnline {
 	 * @throws Exception
 	 */
 	public void init() throws Exception {
+		LOG.debug("AuthTokenHelper init()");
 		String securityToken = receiveSecurityToken();
+		LOG.debug(String.format("AuthTokenHelper init () - Obtained securityToken: %s", securityToken));
 		this.cookies = getSignInCookies(securityToken);
+		LOG.debug(String.format("AuthTokenHelper init () - Obtained Cookies: %s", String.join(";", getCookies())));
 		formDigestValue = getFormDigestValue(this.cookies);
+		LOG.debug(String.format("AuthTokenHelper init () - Obtained Digest Value: %s", getFormDigestValue()));
 	}
 
 

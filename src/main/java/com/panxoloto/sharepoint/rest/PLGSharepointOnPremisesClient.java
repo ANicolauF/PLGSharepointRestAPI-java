@@ -14,6 +14,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
+import com.panxoloto.sharepoint.rest.helper.AuthTokenHelperOnPremises;
+import com.panxoloto.sharepoint.rest.helper.HeadersOnPremiseHelper;
+import com.panxoloto.sharepoint.rest.helper.HttpProtocols;
+import com.panxoloto.sharepoint.rest.helper.Permission;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpMethod;
@@ -21,11 +27,6 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.MultiValueMap;
-
-import com.panxoloto.sharepoint.rest.helper.AuthTokenHelperOnPremises;
-import com.panxoloto.sharepoint.rest.helper.HeadersOnPremiseHelper;
-import com.panxoloto.sharepoint.rest.helper.HttpProtocols;
-import com.panxoloto.sharepoint.rest.helper.Permission;
 
 public class PLGSharepointOnPremisesClient implements PLGSharepointClient {
 

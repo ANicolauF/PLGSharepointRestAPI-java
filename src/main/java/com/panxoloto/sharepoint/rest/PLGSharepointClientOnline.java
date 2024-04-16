@@ -3,6 +3,7 @@ package com.panxoloto.sharepoint.rest;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -486,6 +487,7 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 	@Override
 	public JSONObject uploadFile(String folder, Resource resource, JSONObject jsonMetadata) throws Exception {
 		LOG.debug("Uploading file {} to folder {}", resource.getFilename(), folder);
+
 		JSONObject submeta = new JSONObject();
 		if (jsonMetadata.has("type")) {
 			submeta.put("type", jsonMetadata.get("type"));
@@ -495,16 +497,20 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		jsonMetadata.put("__metadata", submeta);
 		
 	    headers = headerHelper.getPostHeaders("");
-	    headers.remove("Content-Length");
+
 
 		URI uri =  this.tokenHelper.getSharepointSiteUrl(
 				"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
 						+ resource.getFilename() + "',overwrite=true)"
 		);
 		LOG.debug(String.format("URI: %s", uri ));
+		LOG.debug(String.format("Resource: %s -> %s", resource.getFilename(), resource.toString() ));
+		LOG.debug(String.format("Headers"));
+		for (String h : headers.keySet())
+			LOG.debug(String.format("%s -> %s",h, headers.get(h)));
 
 		RequestEntity<Resource> requestEntity = new RequestEntity<>(resource,
-	        headers, HttpMethod.POST, 
+	        headers, HttpMethod.POST,
 	        uri
 	        );
 
@@ -528,13 +534,69 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 		LOG.debug("Updating file adding metadata {}", jsonMetadata);
 
 	    RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata, 
-	        headers, HttpMethod.POST, 
+	        headers, HttpMethod.POST,
 	        uri1
 	        );
 	    ResponseEntity<String> responseEntity1 = 
 		        restTemplate.exchange(uri1.toString(), HttpMethod.POST, requestEntity1, String.class);
 	    LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
 	    return jsonFileInfo;
+	}
+
+
+	public JSONObject uploadFileDev(String folder, Resource resource, JSONObject jsonMetadata) throws Exception {
+		LOG.debug("Uploading file {} to folder {}", resource.getFilename(), folder);
+		JSONObject subMeta = new JSONObject();
+		if (jsonMetadata.has("type")) {
+			subMeta.put("type", jsonMetadata.get("type"));
+		} else {
+			subMeta.put("type", "SP.ListItem");
+		}
+		jsonMetadata.put("__metadata", subMeta);
+
+		headers = headerHelper.getPostHeaders("");
+
+		URI uri =  this.tokenHelper.getSharepointSiteUrl(
+				"/_api/Web/getFolderByServerRelativePath(DecodedUrl='" + folder + "')/Files/add(overwrite=true," +
+						"url='"	+ resource.getFilename() + "')"
+		);
+
+		LOG.debug(String.format("URI: %s", uri ));
+		LOG.debug(String.format("Resource: %s -> %s", resource.getFilename(), resource.toString() ));
+		LOG.debug(String.format("Headers"));
+
+		for (String h : headers.keySet())
+			LOG.debug(String.format("%s -> %s",h, headers.get(h)));
+
+		RequestEntity<Resource> requestEntity = new RequestEntity<>(resource,
+				headers, HttpMethod.POST,
+				uri
+		);
+
+		ResponseEntity<String> responseEntity =
+				restTemplate.exchange(requestEntity, String.class);
+
+		String fileInfoStr = responseEntity.getBody();
+
+		LOG.debug("Retrieved response from server with json");
+
+		JSONObject jsonFileInfo = new JSONObject(fileInfoStr);
+		String serverRelFileUrl = jsonFileInfo.getJSONObject("d").getString("ServerRelativeUrl");
+
+		LOG.debug("File uploaded to URI {}", serverRelFileUrl);
+		String metadata = jsonMetadata.toString();
+		headers = headerHelper.getUpdateHeaders(metadata);
+
+		LOG.debug("Updating file adding metadata {}", jsonMetadata);
+
+		RequestEntity<String> requestEntity1 = new RequestEntity<>(metadata,
+				headers, HttpMethod.POST,
+				this.tokenHelper.getSharepointSiteUrl("/_api/web/GetFileByServerRelativeUrl('" + serverRelFileUrl + "')/listitemallfields")
+		);
+		ResponseEntity<String> responseEntity1 =
+				restTemplate.exchange(requestEntity1, String.class);
+		LOG.debug("Updated file metadata Status {}", responseEntity1.getStatusCode());
+		return jsonFileInfo;
 	}
 
 	/**
@@ -558,6 +620,7 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
 				"/_api/web/GetFolderByServerRelativeUrl('" + folder +"')/Files/add(url='"
 						+ fileName + "',overwrite=true)"
 		);
+
 		LOG.debug(String.format("URI: %s", uri ));
 
 		RequestEntity<Resource> requestEntity = new RequestEntity<>(resource,
@@ -763,6 +826,8 @@ public class PLGSharepointClientOnline implements PLGSharepointClient {
     			headers, HttpMethod.POST, 
     			uri
     			);
+
+
 	    ResponseEntity<String> responseEntity =  restTemplate.exchange(uri.toString(), HttpMethod.POST, requestEntity, String.class);
 	    return new JSONObject(responseEntity.getBody());
 	}

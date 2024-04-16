@@ -91,13 +91,14 @@ public class StreamRestTemplate extends RestTemplate {
 
 		@Override
 		public HttpStatus getStatusCode() throws IOException {
-			return delegate.getStatusCode();
+			return (HttpStatus) delegate.getStatusCode();
 		}
 
 		@Override
 		public int getRawStatusCode() throws IOException {
-			return delegate.getRawStatusCode();
+			return delegate.getStatusCode().value();
 		}
+
 
 		@Override
 		public String getStatusText() throws IOException {
